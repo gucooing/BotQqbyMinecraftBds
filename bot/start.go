@@ -4,6 +4,9 @@ import (
 	"context"
 	"time"
 
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+
 	"github.com/gucooing/BotQqbyMinecraftBds/config"
 	"github.com/tencent-connect/botgo"
 	"github.com/tencent-connect/botgo/dto"
@@ -15,6 +18,7 @@ import (
 
 type MinecraftBot struct {
 	Config   *config.Config
+	Db       *gorm.DB
 	botToken *token.Token
 	api      openapi.OpenAPI
 	ctx      context.Context
@@ -25,7 +29,15 @@ type MinecraftBot struct {
 func NewBot(conf *config.Config) *MinecraftBot {
 	b := new(MinecraftBot)
 	b.Config = conf
+	// 初始化数据库
+	db, err := gorm.Open(sqlite.Open("./data/bot.db"), &gorm.Config{})
+	if err != nil {
+		panic("failed to connect database")
+	}
+	b.Db = db
+	b.Db.AutoMigrate(&User{})
 
+	// 初始化bot设置
 	botToken := token.BotToken(b.Config.AppID, b.Config.Token)
 	b.botToken = botToken
 	// api := botgo.NewOpenAPI(botToken).WithTimeout(3 * time.Second) // 使用NewSandboxOpenAPI创建沙箱环境的实例

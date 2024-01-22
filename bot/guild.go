@@ -1,8 +1,7 @@
 package bot
 
 import (
-	"log"
-
+	"github.com/gucooing/BotQqbyMinecraftBds/logger"
 	"github.com/tencent-connect/botgo/dto"
 )
 
@@ -16,7 +15,7 @@ var guildId string
 func (b *MinecraftBot) guildHandler(event *dto.WSPayload, data *dto.WSGuildData) error {
 	if event.Type == GuildCreateEvent { // 当机器人加入频道时，获取频道的id
 		guildId = data.ID
-		log.Println("guildId = " + data.ID + " guildName = " + data.Name)
+		logger.Debug("guildId = " + data.ID + " guildName = " + data.Name)
 	}
 	return nil
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
 	"strings"
 	"syscall"
@@ -13,6 +14,7 @@ import (
 	"github.com/gucooing/BotQqbyMinecraftBds/bot"
 	"github.com/gucooing/BotQqbyMinecraftBds/config"
 	"github.com/gucooing/BotQqbyMinecraftBds/logger"
+	"github.com/gucooing/BotQqbyMinecraftBds/server"
 )
 
 func main() {
@@ -46,6 +48,38 @@ func main() {
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	// 启动游戏
+	go func() {
+		for {
+			// 启动服务器
+			// 创建一个带有取消机制的上下文（context）
+			_, cancel := context.WithCancel(context.Background())
+			programPath := config.GetConfig().ServerPath
+			bdsServer := server.NewServer(programPath)
+			if bdsServer == nil {
+				logger.Error("服务器启动失败: %v\n", err)
+				continue
+			}
+			defer func(cmd *exec.Cmd) {
+				// 停止服务器进程
+				err := cmd.Process.Kill()
+				if err != nil {
+					fmt.Println("无法终止服务器进程:", err)
+				}
+			}(bdsServer.Cmd)
+			logger.Info("\nServer 启动！")
+			// 启动控制台监控
+			go bdsServer.Command()
+			go bdsServer.ServerStdout()
+			err = bdsServer.Cmd.Wait()
+			// 函数退出，触发进程守护重启服务器
+			logger.Info("发送停止信息...")
+			cancel()
+			logger.Info("2秒后重启服务器...")
+			time.Sleep(2 * time.Second)
+		}
+	}()
 
 	// 启动BOT
 	go func() {

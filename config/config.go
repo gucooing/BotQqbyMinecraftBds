@@ -7,9 +7,10 @@ import (
 )
 
 type Config struct {
-	LogLevel string `json:"LogLevel"`
-	AppID    uint64 `json:"AppID"`
-	Token    string `json:"Token"`
+	LogLevel   string `json:"LogLevel"`
+	AppID      uint64 `json:"AppID"`
+	Token      string `json:"Token"`
+	ServerPath string `json:"ServerPath"`
 }
 
 var CONF *Config = nil
@@ -39,5 +40,6 @@ func LoadConfig(confName string) error {
 }
 
 var DefaultConfig = &Config{
-	LogLevel: "Info",
+	LogLevel:   "Info",
+	ServerPath: "./bedrock_server.exe",
 }
