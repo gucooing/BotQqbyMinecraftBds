@@ -15,43 +15,41 @@ func (b *MinecraftBot) atMessageEventHandler(event *dto.WSPayload, data *dto.WSA
 	}
 
 	// 按空格分割字符串
-	parts := strings.Split(res, " ")
+	parts := strings.SplitN(res, " ", 2)
 
 	// 输出分割后的结果
-	for id, part := range parts {
-		switch part {
-		case "绑定":
-			if len(parts) < id+2 {
-				b.SendQQ(data, "请添加游戏昵称")
-				return nil
-			}
-			if b.FirstUser(data.Author.ID).Name != "" {
-				b.SendQQ(data, "请勿重复绑定")
-				return nil
-			}
-			b.AddUser(parts[id+1], data.Author.ID)
-			server.Sender("whitelist add " + parts[id+1])
-			b.SendQQ(data, "绑定成功")
+	switch parts[0] {
+	case "绑定":
+		if len(parts) != 2 {
+			b.SendQQ(data, "参数非法")
 			return nil
-		case "解绑":
-			user := b.DeleteUser(data.Author.ID)
-			if user.Name != "" {
-				server.Sender("whitelist remove " + user.Name)
-				b.SendQQ(data, "解绑成功")
-				return nil
-			} else {
-				b.SendQQ(data, "解绑失败")
-				return nil
-			}
-		case "cmd":
-			if len(parts) < id+2 {
-				b.SendQQ(data, "请添加指令参数")
-				return nil
-			}
-			// server.Sender("whitelist add " + parts[id+1])
-			b.SendQQ(data, "不是管理员")
-		default:
 		}
+		if b.FirstUser(data.Author.ID).Name != "" {
+			b.SendQQ(data, "请勿重复绑定")
+			return nil
+		}
+		b.AddUser(parts[1], data.Author.ID)
+		server.Sender("whitelist add " + "\"" + parts[1] + "\"")
+		b.SendQQ(data, "绑定玩家:"+"\""+parts[1]+"\""+" 成功")
+		return nil
+	case "解绑":
+		user := b.DeleteUser(data.Author.ID)
+		if user.Name != "" {
+			server.Sender("whitelist remove " + user.Name)
+			b.SendQQ(data, "解绑成功")
+			return nil
+		} else {
+			b.SendQQ(data, "解绑失败")
+			return nil
+		}
+	case "cmd":
+		if len(parts) != 2 {
+			b.SendQQ(data, "参数非法")
+			return nil
+		}
+		// server.Sender("whitelist add " + parts[id+1])
+		b.SendQQ(data, "不是管理员")
+	default:
 	}
 
 	return nil
